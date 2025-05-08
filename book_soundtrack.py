@@ -26,47 +26,78 @@ REDIRECT_URI = st.secrets["REDIRECT_URI"]
 """## Fetch Book Summary"""
 
 def get_book_info(title, author):
-    """Fetch book information from Google Books API with multiple search strategies"""
+    """Fetch book information from Google Books API with enhanced debugging and Indonesian support"""
     from urllib.parse import quote
+    import json
     
-    # Different search strategies to try
+    # Debug print statements visible in Streamlit
+    st.write("🔍 Debug: API Request Details")
+    st.write(f"Original Title: {title}")
+    st.write(f"Original Author: {author}")
+    
+    # Different search strategies with Indonesian support
     search_strategies = [
-        f"intitle:{quote(title)}+inauthor:{quote(author)}",  # Exact search
-        f"\"{quote(title)}\"+inauthor:{quote(author)}",      # Title in quotes
-        quote(f"{title} {author}")                           # Simple search
+        # Strategy 1: Basic search with Indonesian language preference
+        {
+            "query": quote(f"{title} {author}"),
+            "params": "&langRestrict=id&maxResults=10"
+        },
+        # Strategy 2: Exact title and author with quotes
+        {
+            "query": quote(f"\"{title}\" inauthor:\"{author}\""),
+            "params": "&maxResults=10"
+        },
+        # Strategy 3: Relaxed search
+        {
+            "query": quote(f"intitle:{title} inauthor:{author}"),
+            "params": "&maxResults=10"
+        }
     ]
     
-    for query in search_strategies:
-        url = f"https://www.googleapis.com/books/v1/volumes?q={query}&key={GOOGLE_BOOKS_API_KEY}&langRestrict=id"  # Added language restriction for Indonesian
-        
+    for strategy in search_strategies:
         try:
+            url = f"https://www.googleapis.com/books/v1/volumes?q={strategy['query']}{strategy['params']}&key={GOOGLE_BOOKS_API_KEY}"
+            
+            # Show the sanitized URL (hiding the API key)
+            display_url = url.replace(GOOGLE_BOOKS_API_KEY, "API_KEY_HIDDEN")
+            st.write(f"🌐 Trying URL: {display_url}")
+            
             response = requests.get(url)
-            response.raise_for_status()
             
-            # Add debug logging
-            print(f"API URL: {url}")  # For debugging - remove in production
-            print(f"Response status: {response.status_code}")
-            print(f"Response content: {response.text[:200]}")  # Print first 200 chars
+            # Show response status
+            st.write(f"📡 Response Status Code: {response.status_code}")
             
+            # If we get an error status code, show the error
+            if response.status_code != 200:
+                st.write(f"❌ Error Response: {response.text}")
+                continue
+                
             data = response.json()
             
+            # Show the total results found
+            total_items = data.get('totalItems', 0)
+            st.write(f"📚 Total results found: {total_items}")
+            
             if "items" in data and data["items"]:
+                # Show the first few results for debugging
+                st.write("📖 First matching book details:")
                 book = data["items"][0]["volumeInfo"]
+                st.write(json.dumps(book, indent=2))
+                
                 return {
                     "title": book.get("title", "Unknown Title"),
                     "authors": book.get("authors", ["Unknown Author"]),
                     "summary": book.get("description", "No description available."),
                 }
+            else:
+                st.write("⚠️ No items found in response")
                 
         except requests.exceptions.RequestException as e:
-            print(f"Request error with strategy '{query}': {e}")
-            continue
-        except ValueError as e:
-            print(f"Value error with strategy '{query}': {e}")
-            continue
+            st.write(f"🚫 Request error: {str(e)}")
+        except json.JSONDecodeError as e:
+            st.write(f"🚫 JSON parsing error: {str(e)}")
         except Exception as e:
-            print(f"Unexpected error with strategy '{query}': {e}")
-            continue
+            st.write(f"🚫 Unexpected error: {str(e)}")
             
     return None
     
