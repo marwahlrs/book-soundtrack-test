@@ -21,11 +21,11 @@ import streamlit as st
 
 # API Configuration
 
-google_books_key = os.getenv("GOOGLE_BOOKS_API_KEY")
-gemini_key = os.getenv("GEMINI_API_KEY")
-client_id = os.getenv("SPOTIFY_CLIENT_ID")
-client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
-url = os.getenv("REDIRECT_URI")
+google_books_key = st.secrets["GOOGLE_BOOKS_API_KEY"]
+gemini_key = st.secrets["GEMINI_API_KEY"]
+client_id = st.secrets["SPOTIFY_CLIENT_ID"]
+client_secret = st.secrets["SPOTIFY_CLIENT_SECRET"]
+url = st.secrets["REDIRECT_URI"]
 
 # API keys are loaded from environment variables using Streamlit secrets
 
