@@ -27,15 +27,28 @@ REDIRECT_URI = st.secrets["REDIRECT_URI"]
 
 def get_book_info(title, author):
     """Fetch book information from Google Books API"""
-    query = f"intitle:{title}+inauthor:{author}"
+    from urllib.parse import quote
+    
+    # URL encode the title and author
+    encoded_title = quote(title)
+    encoded_author = quote(author)
+    
+    query = f"intitle:{encoded_title}+inauthor:{encoded_author}"
     url = f"https://www.googleapis.com/books/v1/volumes?q={query}&key={GOOGLE_BOOKS_API_KEY}"
-
+    
     try:
         response = requests.get(url)
-        response.raise_for_status()
+        response.raise_for_status()  # This will raise an exception for HTTP errors
+        
+        # Add debug logging
+        print(f"API URL: {url}")  # For debugging - remove in production
+        print(f"Response status: {response.status_code}")
+        print(f"Response content: {response.text[:200]}")  # Print first 200 chars
+        
         data = response.json()
 
         if "items" not in data or not data["items"]:
+            print(f"No results found. API response: {data}")  # Debug logging
             raise ValueError("No books found for the provided title and author.")
 
         book = data["items"][0]["volumeInfo"]
@@ -45,10 +58,15 @@ def get_book_info(title, author):
             "summary": book.get("description", "No description available."),
         }
 
-    except Exception as e:
-        print(f"Error fetching book info: {e}")
+    except requests.exceptions.RequestException as e:
+        print(f"Request error: {e}")
         return None
-
+    except ValueError as e:
+        print(f"Value error: {e}")
+        return None
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return None
 """## Analyze Book Content"""
 
 def analyze_book_with_gemini(book_info):
