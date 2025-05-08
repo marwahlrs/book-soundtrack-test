@@ -323,7 +323,6 @@ def display_tracks_details(tracks):
     st.markdown("=" * 50)
 
 def main():
-    """Main application flow"""
     st.title("📚 Literary Soundtrack Generator 🎵")
     st.markdown("=" * 50)
 
@@ -335,21 +334,23 @@ def main():
         st.warning("Please enter both the book title and author.")
         return
 
+    # Add debug info
+    st.write("Debug Information:")
+    st.write(f"Searching for title: '{book_title}'")
+    st.write(f"Searching for author: '{book_author}'")
+    
     # Fetch book information
     st.write("\n📖 Fetching book information...")
     book_info = get_book_info(book_title, book_author)
 
     if not book_info:
         st.error("❌ Could not find book information. Please check the title and author.")
+        # Add additional debug info
+        st.write("Try these troubleshooting steps:")
+        st.write("1. Check if the title and author are spelled correctly")
+        st.write("2. Try using the English title if available")
+        st.write("3. Make sure your API key is valid")
         return
-
-    # Display book info
-    st.success(f"✅ Book found: {book_info['title']} by {', '.join(book_info['authors'])}")
-    if book_info.get('summary'):
-        st.subheader("Summary:")
-        st.markdown("-" * 50)
-        st.write(f"{book_info['summary'][:200]}...")
-        st.markdown("-" * 50)
 
     # Analyze content
     st.write("\n🤖 Analyzing book content...")
