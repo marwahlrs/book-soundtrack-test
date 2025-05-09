@@ -4,6 +4,7 @@ import google.generativeai as genai
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import os
+import urllib.parse
 
 # Set page configuration
 st.set_page_config(
@@ -74,9 +75,10 @@ def get_book_info(title, author):
     keys = load_api_keys()
     if not keys:
         return None
-    
-    query = f"intitle:{title}+inauthor:{author}"
-    url = f"https://www.googleapis.com/books/v1/volumes?q={query}&key={keys['GOOGLE_BOOKS_API_KEY']}"
+        
+    query = f"intitle:{title} inauthor:{author}"
+    encoded_query = urllib.parse.quote_plus(query)
+    url = f"https://www.googleapis.com/books/v1/volumes?q={encoded_query}&key={keys['GOOGLE_BOOKS_API_KEY']}"
 
     try:
         response = requests.get(url)
